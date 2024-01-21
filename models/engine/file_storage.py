@@ -5,19 +5,18 @@ import json
 
 class FileStorage:
     """This class manages storage of hbnb models in JSON format"""
-    # __file_path stores the data into json
     __file_path = 'file.json'
-    # __objects is used to create a dictionary of the objects
     __objects = {}
 
     def all(self, cls=None):
         """Returns a dictionary of models currently in storage"""
-        if cls is None:
-            # if cls is None, return values of the objects in a list
-            return list(FileStorage.__objects.values())
-        else:
-            return [obj for obj in
-                    FileStorage.__objects.values() if isinstance(obj, cls)]
+        filtered_by_class = {}
+        if cls:
+            for key, value in FileStorage.__objects.items():
+                if value.__class__ == cls:
+                    filtered_by_class[key] = value
+            return filtered_by_class
+        return FileStorage.__objects
 
     def new(self, obj):
         """Adds new object to storage dictionary"""
@@ -43,10 +42,10 @@ class FileStorage:
         from models.review import Review
 
         classes = {
-                    'BaseModel': BaseModel, 'User': User, 'Place': Place,
-                    'State': State, 'City': City, 'Amenity': Amenity,
-                    'Review': Review
-                  }
+            'BaseModel': BaseModel, 'User': User, 'Place': Place,
+            'State': State, 'City': City, 'Amenity': Amenity,
+            'Review': Review
+        }
         try:
             temp = {}
             with open(FileStorage.__file_path, 'r') as f:
@@ -57,12 +56,11 @@ class FileStorage:
             pass
 
     def delete(self, obj=None):
-        """Deletes obj from __objects if it exists"""
-        if obj is not None and obj in FileStorage.__objects.values():
-            key_to_remove = None
-            for key, value in FileStorage.__objects.items():
-                if value == obj:
-                    key_to_remove = key
-                    break
-            if key_to_remove is not None:
-                del FileStorage.__objects[key_to_remove]
+        ''' delete obj from __objects if it is inside '''
+        if obj:
+            key = '{}.{}'.format(type(obj).__name__, obj.id)
+            del FileStorage.__objects[key]
+
+    def close(self):
+        """ Deserialize JSON file to objects before leaving """
+        self.reload()
